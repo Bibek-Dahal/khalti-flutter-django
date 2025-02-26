@@ -39,6 +39,7 @@ class InitiateKhaltiPayment(APIView):
                     name = serializer.validated_data["name"]
                     image_url = serializer.validated_data.get("image_url", "")
                     user_id = serializer.validated_data["user_id"]
+                    phone_number = serializer.validated_data["phone_number"]
                     user = User.objects.get(id=user_id)
 
                     # Create order (if any step fails, everything will be rolled back)
@@ -57,9 +58,9 @@ class InitiateKhaltiPayment(APIView):
                         "purchase_order_id": str(order.id),
                         "purchase_order_name": order.name,
                         "customer_info": {
-                            "name": request.data.get('name'),
+                            "name": "test",
                             "email": 'test@gmail.com',
-                            "phone": request.data.get('phone_number')
+                            "phone": phone_number
                         }
                     })
 
@@ -70,14 +71,16 @@ class InitiateKhaltiPayment(APIView):
                     }
 
                     response = requests.post("https://a.khalti.com/api/v2/epayment/initiate/", headers=headers, data=payload)
+                    print("response==",response)
                     new_res = response.json()
-
+                    
                     # If request is successful, return redirect URL
-                    return Response({'redirect_url': new_res['payment_url']}, status=status.HTTP_200_OK)
+                    return Response({'redirect_url': new_res['payment_url'],'order_id':order.id}, status=status.HTTP_200_OK)
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        except IntegrityError as e:
+        except Exception as e:
+            print("internal server error",e)
             # Handle the error and rollback
             return Response({'error': 'An error occurred while processing the order.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -111,10 +114,11 @@ class VerifyKhalti(APIView):
 
             if new_res['status'] == 'Completed':
                 
-                    order = Order.objects.get(id=purchase_order_id)
+                    order = Order.objects.get(id=self.request.GET.get('purchase_order_id'))
+                    print("order",order)
                     if not order:
                        return Response({'data':{'message':'Order could not be completed. Please contact administration.'}},status=status.HTTP_400_BAD_REQUEST)
-                    order.status = OrderStatus.COMPLETED
+                    order.order_status = OrderStatus.COMPLETED
                     order.save()
                     return Response({'data':{'message':'Order Created'}},status=status.HTTP_200_OK)
                    
