@@ -76,13 +76,13 @@ class PlantsListScreen extends StatelessWidget {
                 trailing: ElevatedButton(
                   onPressed: () async {
                     var url = Uri.parse(
-                      "http://192.168.1.67:8000/orders/khalti-initiate/",
+                      "http://192.168.1.72:8000/orders/khalti-initiate/",
                     );
 
                     var payload = {
                       "return_url":
-                          "http://192.168.1.67:8000/orders/khalti-verify/",
-                      "website_url": "http://192.168.1.67:8000",
+                          "http://192.168.1.72:8000/orders/khalti-verify/",
+                      "website_url": "http://192.168.1.72:8000",
                       "price": plant.price * 1000,
                       "quantity": 12,
                       "name": plant.name,
